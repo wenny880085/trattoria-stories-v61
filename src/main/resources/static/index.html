@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trattoria Stories v5 正式展示版</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","Microsoft JhengHei",Arial,sans-serif;
+      background:#3b2618;
+      color:#3b2618;
+      overflow:hidden;
+    }
+    #app{
+      height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+    .topbar{
+      height:64px;
+      background:linear-gradient(135deg,#6f260d,#d88735);
+      color:white;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 18px;
+      box-shadow:0 4px 14px rgba(0,0,0,.25);
+      flex-shrink:0;
+    }
+    .topbar h1{margin:0;font-size:26px}
+    .top-stats{display:flex;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+    .pill{
+      background:rgba(255,255,255,.18);
+      border:1px solid rgba(255,255,255,.35);
+      border-radius:999px;
+      padding:7px 11px;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .login{
+      width:min(520px,92vw);
+      margin:14vh auto;
+      background:#fffaf1;
+      border:1px solid #ead3b3;
+      border-radius:22px;
+      padding:24px;
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+      text-align:center;
+    }
+    input{
+      border:1px solid #dabd91;
+      padding:12px;
+      border-radius:12px;
+      font-size:16px;
+      width:210px;
+    }
+    button{
+      border:0;
+      border-radius:12px;
+      padding:10px 12px;
+      background:#a94f19;
+      color:white;
+      font-weight:800;
+      cursor:pointer;
+      transition:.15s;
+    }
+    button:hover{transform:translateY(-1px);background:#883d12}
+    button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    .btn2{background:#2f6d45}.btn3{background:#325d92}.btn4{background:#915c9b}.btn5{background:#be7a12}.danger{background:#9b2f2f}
+    .game{
+      height:calc(100vh - 64px);
+      display:grid;
+      grid-template-columns:170px minmax(360px,1fr) 380px;
+      gap:10px;
+      padding:10px;
+      overflow:hidden;
+    }
+    .panel{
+      background:#fffaf1;
+      border:1px solid #ead3b3;
+      border-radius:18px;
+      padding:12px;
+      box-shadow:0 6px 18px rgba(0,0,0,.18);
+      overflow:hidden;
+    }
+    .side{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .navbtn{
+      width:100%;
+      text-align:left;
+      background:#fff3d8;
+      color:#4b2b16;
+      border:1px solid #e4c18b;
+      padding:13px 12px;
+      font-size:16px;
+    }
+    .navbtn.active{
+      background:#a94f19;
+      color:white;
+      border-color:#a94f19;
+    }
+    .restaurant-wrap{
+      display:grid;
+      grid-template-rows:1fr 210px;
+      gap:10px;
+      overflow:hidden;
+    }
+    .restaurant{
+      position:relative;
+      min-height:360px;
+      border-radius:20px;
+      background:
+        radial-gradient(circle at 50% 12%,rgba(255,235,165,.95),transparent 18%),
+        linear-gradient(#ffe7b9 0%, #fff3d7 46%, #d99a5b 47%, #b97438 100%);
+      border:2px dashed #d29445;
+      overflow:hidden;
+    }
+    .sky-title{
+      position:absolute;
+      top:14px;
+      left:18px;
+      font-weight:900;
+      font-size:22px;
+      color:#7b2d10;
+    }
+    .stars-big{
+      position:absolute;
+      top:14px;
+      right:18px;
+      font-size:25px;
+      color:#b77413;
+      letter-spacing:2px;
+    }
+    .signboard{
+      position:absolute;
+      top:72px;
+      left:50%;
+      transform:translateX(-50%);
+      min-width:280px;
+      background:#7b3a16;
+      color:#fff3d8;
+      border:4px double #f0c475;
+      border-radius:18px;
+      padding:12px 18px;
+      text-align:center;
+      box-shadow:0 6px 12px rgba(0,0,0,.2);
+    }
+    .sign-title{font-size:24px;font-weight:900}
+    .sign-stars{font-size:18px;color:#ffe3a3;margin-top:4px}
+    .empty-note{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      color:#8b5d32;
+      font-weight:900;
+      background:rgba(255,255,255,.62);
+      border:1px solid rgba(126,80,33,.25);
+      border-radius:14px;
+      padding:12px 16px;
+      text-align:center;
+    }
+    .lamp{
+      position:absolute;
+      top:145px;
+      font-size:44px;
+      filter:drop-shadow(0 4px 3px rgba(0,0,0,.16));
+    }
+    .lamp-left{left:24%}
+    .lamp-right{right:24%}
+    .kitchen-zone{
+      position:absolute;
+      left:8%;
+      top:215px;
+      width:150px;
+      min-height:100px;
+      border-radius:18px;
+      background:rgba(255,255,255,.45);
+      border:2px dashed rgba(126,80,33,.35);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      gap:5px;
+    }
+    .table-zone{
+      position:absolute;
+      right:8%;
+      top:205px;
+      width:260px;
+      min-height:150px;
+      border-radius:18px;
+      background:rgba(255,255,255,.30);
+      border:2px dashed rgba(126,80,33,.3);
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      padding:14px;
+      align-content:center;
+    }
+    .table-set{
+      height:56px;
+      border-radius:14px;
+      background:rgba(255,250,241,.78);
+      border:1px solid rgba(126,80,33,.25);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:30px;
+    }
+    .table-set.dim{opacity:.18}
+    .waiter-zone{
+      position:absolute;
+      left:50%;
+      bottom:34px;
+      transform:translateX(-50%);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:4px;
+    }
+    .big-icon{font-size:42px}
+    .level-tag{
+      font-size:12px;
+      background:rgba(79,43,22,.85);
+      color:white;
+      border-radius:99px;
+      padding:3px 7px;
+    }
+    .entrance{
+      position:absolute;
+      left:50%;
+      bottom:0;
+      transform:translateX(-50%);
+      width:135px;
+      height:38px;
+      background:#6b3a1f;
+      border-radius:16px 16px 0 0;
+      color:#ffe8b5;
+      text-align:center;
+      padding-top:8px;
+      font-weight:900;
+    }
+    .status-card{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:8px;
+      overflow:auto;
+    }
+    .scorebox{
+      background:#fff3d8;
+      border:1px solid #efd2a0;
+      border-radius:14px;
+      padding:10px;
+    }
+    .scorebox b{display:block;margin-bottom:5px}
+    .bar{
+      height:12px;
+      background:#ead8bd;
+      border-radius:99px;
+      overflow:hidden;
+      border:1px solid #d4b98e;
+      margin:6px 0;
+    }
+    .bar span{display:block;height:100%;background:linear-gradient(90deg,#c77a2c,#ffd166);width:0}
+    .bar.green span{background:linear-gradient(90deg,#4e9b64,#b8efad)}
+    .bar.blue span{background:linear-gradient(90deg,#4e7db8,#94c2ff)}
+    .right{
+      display:grid;
+      grid-template-rows:minmax(0,1fr) 215px;
+      gap:10px;
+      overflow:hidden;
+    }
+    .content{
+      overflow:auto;
+      padding-right:4px;
+    }
+    .content h2{margin:0 0 10px;font-size:22px}
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(155px,1fr));
+      gap:10px;
+    }
+    .item{
+      border:1px solid #ead0aa;
+      border-radius:14px;
+      padding:11px;
+      background:#fffdf7;
+    }
+    .item h3{margin:0 0 6px;font-size:17px}
+    .item p{margin:4px 0;color:#6e4c2c;font-size:13px}
+    .locked{filter:grayscale(.8);opacity:.58}
+    .log{
+      height:100%;
+      overflow:auto;
+      background:#2c1d13;
+      color:#ffe4b3;
+      border-radius:14px;
+      padding:10px;
+      font-size:13px;
+      line-height:1.55;
+    }
+    .badge{
+      display:inline-block;
+      background:#ffe1a6;
+      color:#66320d;
+      border:1px solid #d9a04f;
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:13px;
+      margin:3px;
+    }
+    .badge.green{background:#dff6df;border-color:#8ac58a}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .modal-bg{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.55);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:50;
+      padding:16px;
+    }
+    .modal{
+      width:min(660px,96vw);
+      max-height:88vh;
+      overflow:auto;
+      background:#fffaf1;
+      border:3px solid #d8a243;
+      border-radius:22px;
+      padding:18px;
+      box-shadow:0 14px 40px rgba(0,0,0,.45);
+      text-align:center;
+    }
+    .ingredient{
+      background:#fff;
+      border:1px solid #d8b77c;
+      color:#4a2b14;
+      margin:5px;
+    }
+    .ingredient.active{
+      background:#2f6d45;
+      color:white;
+      border-color:#2f6d45;
+    }
+    .certificate{
+      background:linear-gradient(160deg,#fff8df,#ffffff);
+      border:3px double #b8860b;
+      border-radius:20px;
+      padding:18px;
+      text-align:center;
+    }
+    .cert-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      margin-top:14px;
+    }
+    .cert-box{
+      background:#fff4cf;
+      border:1px solid #d5a935;
+      border-radius:14px;
+      padding:10px;
+      font-weight:800;
+    }
+    .cert-box small{display:block;font-weight:400;color:#7d5d3d}
+    .toast{
+      position:fixed;
+      right:18px;
+      bottom:18px;
+      background:#3b2618;
+      color:white;
+      padding:12px 16px;
+      border-radius:14px;
+      box-shadow:0 6px 18px rgba(0,0,0,.25);
+      z-index:80;
+    }
+    @media(max-width:980px){
+      body{overflow:auto}
+      #app{height:auto;min-height:100vh}
+      .game{height:auto;grid-template-columns:1fr}
+      .side{flex-direction:row;overflow:auto}
+      .navbtn{min-width:120px}
+      .restaurant-wrap{grid-template-rows:420px auto}
+      .right{grid-template-rows:auto 220px}
+      .cert-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <h1>🍝 Trattoria Stories</h1>
+    <div class="top-stats" v-if="isLogin">
+      <span class="pill">💰 {{ restaurant.gold }}</span>
+      <span class="pill">⭐ {{ restaurant.michelinStars }}/6</span>
+      <span class="pill">Day {{ restaurant.days }}</span>
+      <span class="pill">📦 {{ restaurant.totalOrders }}單</span>
+    </div>
+  </div>
+
+  <div class="login" v-if="!isLogin">
+    <h2>🔐 玩家登入</h2>
+    <p>v5 正式展示版：固定三欄式遊戲介面。</p>
+    <div class="row" style="justify-content:center">
+      <input v-model="username" placeholder="輸入玩家名稱">
+      <button @click="login">開始經營餐廳</button>
+    </div>
+  </div>
+
+  <div class="game" v-else>
+    <div class="panel side">
+      <button class="navbtn" :class="{active:tab==='menu'}" @click="tab='menu'">🍽️ 菜單</button>
+      <button class="navbtn" :class="{active:tab==='staff'}" @click="tab='staff'">👨‍🍳 員工</button>
+      <button class="navbtn" :class="{active:tab==='decor'}" @click="tab='decor'">🪑 裝潢</button>
+      <button class="navbtn" :class="{active:tab==='score'}" @click="tab='score'">⭐ 評分</button>
+      <button class="navbtn" :class="{active:tab==='goal'}" @click="tab='goal'">🏆 目標</button>
+      <button class="navbtn" @click="resetGame">🔄 重來</button>
+    </div>
+
+    <div class="restaurant-wrap">
+      <div class="restaurant">
+        <div class="sky-title">{{ restaurant.name }}</div>
+        <div class="stars-big">{{ starDisplay }}</div>
+        <div class="signboard">
+          <div class="sign-title">🍝 {{ restaurant.name }}</div>
+          <div class="sign-stars">{{ starDisplay }}</div>
+        </div>
+
+        <div class="empty-note" v-if="decorTotalLevel === 0 && !chef && !waiter">
+          小餐館剛開張<br>目前還沒有員工與裝潢
+        </div>
+
+        <div class="lamp lamp-left" v-if="decorations[2].owned">💡</div>
+        <div class="lamp lamp-right" v-if="decorations[2].level >= 3">💡</div>
+
+        <div class="kitchen-zone" v-if="decorations[1].owned || chef">
+          <div v-if="decorations[1].owned" class="big-icon">🔥</div>
+          <div v-if="decorations[1].owned" class="level-tag">灶台 Lv.{{ decorations[1].level }}</div>
+          <div v-if="chef" class="big-icon">👨‍🍳</div>
+          <div v-if="chef" class="level-tag">廚師 Lv.{{ chef.level }}</div>
+        </div>
+
+        <div class="table-zone" v-if="decorations[0].owned || decorations[3].owned">
+          <div class="table-set" :class="{dim:!decorations[0].owned}">
+            <span v-if="decorations[0].owned">🪑</span><span v-if="decorations[3].owned">🍽️</span>
+          </div>
+          <div class="table-set" :class="{dim:decorations[0].level < 2}">
+            <span v-if="decorations[0].level >= 2">🪑</span><span v-if="decorations[3].level >= 2">🍽️</span>
+          </div>
+          <div class="table-set" :class="{dim:decorations[0].level < 4}">
+            <span v-if="decorations[0].level >= 4">🪑</span><span v-if="decorations[3].level >= 4">🍽️</span>
+          </div>
+          <div class="table-set" :class="{dim:decorations[3].level < 5}">
+            <span v-if="decorations[0].level >= 5">🪑</span><span v-if="decorations[3].level >= 5">🍽️🥂</span>
+          </div>
+        </div>
+
+        <div class="waiter-zone" v-if="waiter">
+          <div class="big-icon">🤵</div>
+          <div class="level-tag">服務員 Lv.{{ waiter.level }}</div>
+        </div>
+
+        <div class="entrance">ENTRANCE</div>
+      </div>
+
+      <div class="panel status-card">
+        <div class="scorebox">
+          <b>餐廳氛圍 {{ restaurant.atmosphereScore }}/100</b>
+          <div class="bar"><span :style="{width:scoreWidth(restaurant.atmosphereScore)+'%'}"></span></div>
+          <small>裝潢影響</small>
+        </div>
+        <div class="scorebox">
+          <b>餐點評分 {{ restaurant.foodScore }}/100</b>
+          <div class="bar green"><span :style="{width:scoreWidth(restaurant.foodScore)+'%'}"></span></div>
+          <small>廚師影響</small>
+        </div>
+        <div class="scorebox">
+          <b>服務體驗 {{ restaurant.serviceScore }}/100</b>
+          <div class="bar blue"><span :style="{width:scoreWidth(restaurant.serviceScore)+'%'}"></span></div>
+          <small>服務員影響</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="panel content">
+        <template v-if="tab==='menu'">
+          <h2>🍽️ 接單製作</h2>
+          <div class="cards">
+            <div class="item" v-for="m in menus" :key="m.id" :class="{locked:!m.unlocked}">
+              <h3>{{ m.unlocked ? m.icon : '🔒' }} {{ m.name }}</h3>
+              <p>{{ m.category }}｜售價 {{ m.price }}｜成本 {{ m.cost }}</p>
+              <p>{{ m.description }}</p>
+              <button @click="cook(m)" :disabled="!m.unlocked || restaurant.gold < m.cost || critic.active">
+                {{ m.unlocked ? '接單' : '未解鎖' }}
+              </button>
+            </div>
+          </div>
+        </template>
+
+        <template v-if="tab==='staff'">
+          <h2>👨‍🍳 員工聘僱與升級</h2>
+          <div class="cards">
+            <div class="item">
+              <h3>👨‍🍳 廚師</h3>
+              <p v-if="!chef">目前沒有廚師，餐點拿 10 分機率低。</p>
+              <p v-else>{{ chef.name }}｜Lv.{{ chef.level }}/5</p>
+              <p><span class="badge">Lv2 青醬</span><span class="badge">Lv3 紅醬</span><span class="badge">Lv4 白醬</span></p>
+              <button class="btn2" v-if="!chef" @click="hireChef" :disabled="restaurant.gold < 250">聘僱 250</button>
+              <button class="btn2" v-else @click="upgradeChef" :disabled="chef.level>=5 || restaurant.gold < chefUpgradeCost">
+                {{ chef.level>=5 ? '滿級' : '升級 '+chefUpgradeCost }}
+              </button>
+            </div>
+
+            <div class="item">
+              <h3>🤵 服務員</h3>
+              <p v-if="!waiter">目前沒有服務員，服務拿 10 分機率低。</p>
+              <p v-else>{{ waiter.name }}｜Lv.{{ waiter.level }}/5</p>
+              <button class="btn5" v-if="!waiter" @click="hireWaiter" :disabled="restaurant.gold < 180">聘僱 180</button>
+              <button class="btn5" v-else @click="upgradeWaiter" :disabled="waiter.level>=5 || restaurant.gold < waiterUpgradeCost">
+                {{ waiter.level>=5 ? '滿級' : '升級 '+waiterUpgradeCost }}
+              </button>
+            </div>
+          </div>
+        </template>
+
+        <template v-if="tab==='decor'">
+          <h2>🪑 裝潢購買與升級</h2>
+          <div class="cards">
+            <div class="item" v-for="d in decorations" :key="d.id">
+              <h3>{{ d.icon }} {{ d.name }}</h3>
+              <p>{{ d.description }}</p>
+              <p>目前：{{ d.owned ? 'Lv.'+d.level+'/5' : '尚未購買' }}</p>
+              <button class="btn4" v-if="!d.owned" @click="buyDecor(d)" :disabled="restaurant.gold < d.buyCost">購買 {{ d.buyCost }}</button>
+              <button class="btn4" v-else @click="upgradeDecor(d)" :disabled="d.level>=5 || restaurant.gold < decorUpgradeCost(d)">
+                {{ d.level>=5 ? '滿級' : '升級 '+decorUpgradeCost(d) }}
+              </button>
+            </div>
+          </div>
+        </template>
+
+        <template v-if="tab==='score'">
+          <h2>⭐ 評分規則</h2>
+          <p>每次接單三項評分最多各 +10 分。</p>
+          <p>沒有升級時拿 10 分機率低；廚師、服務員、裝潢等級越高，拿 10 分機率越高，最高約 80%。</p>
+          <p>三項都達 100 分，會出現美食評家。成功完成創意料理就升星，失敗三項評分倒扣一半。</p>
+        </template>
+
+        <template v-if="tab==='goal'">
+          <h2>🏆 遊戲目標</h2>
+          <p>目標：達成 Michelin ★★★★★★ 明星餐廳。</p>
+          <p>目前解鎖料理：{{ availableMenus.length }}/{{ menus.length }}</p>
+          <p>裝潢完成度：{{ decorTotalLevel }}/20</p>
+          <p>廚師等級：{{ chef ? chef.level : 0 }}/5</p>
+          <p>服務員等級：{{ waiter ? waiter.level : 0 }}/5</p>
+        </template>
+      </div>
+
+      <div class="panel">
+        <h2 style="margin:0 0 8px;font-size:18px">📜 遊戲訊息</h2>
+        <div class="log">
+          <div v-for="(l,i) in logs" :key="i">• {{ l }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-bg" v-if="critic.active">
+    <div class="modal">
+      <h2>🕵️ 美食評家來訪</h2>
+      <p>升星前評家會點創意料理。成功馬上升 1 顆星；失敗三項評分倒扣一半。</p>
+      <h3>評家任務 {{ critic.currentIndex + 1 }} / {{ critic.required }}</h3>
+      <p>「我想吃一道 <b>{{ critic.target.name }}</b>。」</p>
+      <p>提示：{{ critic.target.hint }}</p>
+      <p v-if="critic.required === 3">⭐ 六星最終考驗：三位美食評家連續挑戰。</p>
+
+      <div v-if="!critic.gameStarted">
+        <button class="btn5" @click="startCreativeGame">開始創意料理小遊戲</button>
+      </div>
+
+      <div v-else>
+        <h3>🎮 食材搭配挑戰</h3>
+        <p>請選出最符合主題的 <b>3 個食材</b>。</p>
+        <div>
+          <button
+            v-for="ing in ingredients"
+            :key="ing.id"
+            class="ingredient"
+            :class="{active:selectedIngredients.includes(ing.id)}"
+            @click="toggleIngredient(ing.id)">
+            {{ ing.icon }} {{ ing.name }}
+          </button>
+        </div>
+        <div class="row" style="justify-content:center;margin-top:12px">
+          <button class="btn2" @click="submitCreativeDish" :disabled="selectedIngredients.length !== 3">送出創意料理</button>
+          <button class="btn3" @click="resetCreativeGame">重新選擇</button>
+          <button class="danger" @click="failCriticChallenge">放棄挑戰</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-bg" v-if="restaurant.michelinStars >= 6">
+    <div class="modal">
+      <div class="certificate">
+        <div style="font-size:46px">🏆🎉</div>
+        <h1>Michelin ★★★★★★</h1>
+        <h2>恭喜！達成六星明星餐廳！</h2>
+        <p>你的餐廳成功從小餐館成長為頂級義式餐廳。</p>
+        <div class="cert-grid">
+          <div class="cert-box">{{ restaurant.days }} 天<small>經營天數</small></div>
+          <div class="cert-box">{{ restaurant.totalOrders }} 張<small>完成訂單</small></div>
+          <div class="cert-box">{{ restaurant.totalIncome }} 金幣<small>總收入</small></div>
+          <div class="cert-box">{{ availableMenus.length }}/{{ menus.length }}<small>解鎖料理</small></div>
+          <div class="cert-box">{{ chef ? chef.level : 0 }}/5<small>廚師等級</small></div>
+          <div class="cert-box">{{ waiter ? waiter.level : 0 }}/5<small>服務員等級</small></div>
+          <div class="cert-box">{{ decorTotalLevel }}/20<small>裝潢完成度</small></div>
+          <div class="cert-box">{{ restaurant.michelinStars }}/6<small>米其林星級</small></div>
+          <div class="cert-box">明星餐廳<small>最終稱號</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" v-if="toast">{{ toast }}</div>
+</div>
+
+<script>
+const { createApp } = Vue;
+
+createApp({
+  data(){
+    return {
+      isLogin:false,
+      username:'',
+      tab:'menu',
+      toast:'',
+      critic:{
+        active:false,
+        gameStarted:false,
+        required:1,
+        currentIndex:0,
+        target:{name:'',hint:'',answer:[]}
+      },
+      selectedIngredients:[],
+      criticTargets:[
+        {name:'清爽系義式創意料理', hint:'清香、酸甜、海味。', answer:[1,3,6]},
+        {name:'濃郁白醬創意料理', hint:'奶香、菇香、起司香。', answer:[2,4,5]},
+        {name:'熱情紅醬創意料理', hint:'番茄、肉香、微辣。', answer:[7,8,9]},
+        {name:'高級餐酒搭配料理', hint:'紅酒香、肉香、起司香。', answer:[5,8,10]},
+        {name:'甜點系創意料理', hint:'可可、奶香、莓果酸甜。', answer:[2,11,12]}
+      ],
+      ingredients:[
+        {id:1, icon:'🌿', name:'羅勒'},
+        {id:2, icon:'🥛', name:'鮮奶油'},
+        {id:3, icon:'🍋', name:'檸檬'},
+        {id:4, icon:'🍄', name:'蘑菇'},
+        {id:5, icon:'🧀', name:'帕瑪森起司'},
+        {id:6, icon:'🦐', name:'鮮蝦'},
+        {id:7, icon:'🍅', name:'番茄'},
+        {id:8, icon:'🥩', name:'牛肉丸'},
+        {id:9, icon:'🌶️', name:'辣椒'},
+        {id:10, icon:'🍷', name:'紅酒醬'},
+        {id:11, icon:'🍫', name:'可可粉'},
+        {id:12, icon:'🍓', name:'莓果'}
+      ],
+      chef:null,
+      waiter:null,
+      restaurant:{
+        name:'Bella Pasta',
+        gold:420,
+        totalOrders:0,
+        totalIncome:0,
+        days:1,
+        michelinStars:0,
+        criticStageCleared:false,
+        atmosphereScore:0,
+        foodScore:0,
+        serviceScore:0
+      },
+      menus:[
+        {id:1, icon:'🫒', category:'義大利麵', name:'清炒義大利麵', price:90, cost:25, unlocked:true, needChefLevel:0, description:'開局基本料理。'},
+        {id:2, icon:'🌿', category:'義大利麵', name:'青醬義大利麵', price:130, cost:45, unlocked:false, needChefLevel:2, description:'廚師 Lv2 解鎖。'},
+        {id:3, icon:'🍅', category:'義大利麵', name:'紅醬義大利麵', price:170, cost:65, unlocked:false, needChefLevel:3, description:'廚師 Lv3 解鎖。'},
+        {id:4, icon:'🥛', category:'義大利麵', name:'白醬義大利麵', price:220, cost:90, unlocked:false, needChefLevel:4, description:'廚師 Lv4 解鎖。'},
+        {id:5, icon:'🍮', category:'甜點', name:'提拉米蘇', price:110, cost:35, unlocked:true, needChefLevel:0, description:'開局可販售甜點。'},
+        {id:6, icon:'🍷', category:'紅酒飲料', name:'紅酒飲料組', price:140, cost:50, unlocked:true, needChefLevel:0, description:'增加客單價。'}
+      ],
+      decorations:[
+        {id:1, icon:'🪑', name:'桌椅', buyCost:160, level:0, owned:false, description:'影響餐廳氛圍。'},
+        {id:2, icon:'🔥', name:'灶台', buyCost:220, level:0, owned:false, description:'提升餐廳質感。'},
+        {id:3, icon:'💡', name:'吊燈', buyCost:180, level:0, owned:false, description:'提升燈光氣氛。'},
+        {id:4, icon:'🍽️', name:'餐具', buyCost:140, level:0, owned:false, description:'提升用餐精緻度。'}
+      ],
+      logs:['歡迎開店！目前沒有廚師、沒有服務員。可以先靠清炒、甜點、紅酒飲料賺錢。']
+    }
+  },
+  computed:{
+    availableMenus(){ return this.menus.filter(m=>m.unlocked) },
+    decorTotalLevel(){ return this.decorations.reduce((s,d)=>s+d.level,0) },
+    chefUpgradeCost(){ return this.chef ? 180 + this.chef.level * 170 : 0 },
+    waiterUpgradeCost(){ return this.waiter ? 140 + this.waiter.level * 130 : 0 },
+    starDisplay(){ return '★'.repeat(this.restaurant.michelinStars) + '☆'.repeat(6 - this.restaurant.michelinStars) }
+  },
+  methods:{
+    login(){
+      if(!this.username.trim()){ this.showToast('請輸入玩家名稱'); return; }
+      this.isLogin=true;
+      this.restaurant.name = this.username + "'s Pasta";
+      this.logs.unshift('玩家 '+this.username+' 登入成功，開始經營餐廳！');
+    },
+    scoreWidth(v){ return Math.min(100, v); },
+    cook(menu){
+      if(!menu.unlocked){ this.showToast('這道餐點尚未開發'); return; }
+      if(this.restaurant.gold < menu.cost){ this.showToast('金幣不足'); return; }
+
+      this.restaurant.gold -= menu.cost;
+
+      const chefLv = this.chef ? this.chef.level : 0;
+      const waiterLv = this.waiter ? this.waiter.level : 0;
+      const decorLv = this.decorTotalLevel;
+
+      const foodGain = this.rollScoreByLevel(chefLv, menu.category === '義大利麵' ? 1 : 0);
+      const atmosphereGain = this.rollScoreByLevel(Math.ceil(decorLv / 4), 0);
+      const serviceGain = this.rollScoreByLevel(waiterLv, menu.category === '紅酒飲料' ? 1 : 0);
+
+      const qualityRate = (foodGain + atmosphereGain + serviceGain) / 30;
+      const income = Math.floor(menu.price * (0.75 + qualityRate));
+      const profit = income - menu.cost;
+
+      this.restaurant.gold += income;
+      this.restaurant.totalOrders += 1;
+      this.restaurant.totalIncome += income;
+      this.restaurant.days += 1;
+      this.restaurant.foodScore += foodGain;
+      this.restaurant.atmosphereScore += atmosphereGain;
+      this.restaurant.serviceScore += serviceGain;
+
+      this.logs.unshift(`完成「${menu.name}」：收入 ${income}、淨賺 ${profit}｜氛圍 +${atmosphereGain}、餐點 +${foodGain}、服務 +${serviceGain}`);
+      this.tryMichelinUp();
+    },
+    rollScoreByLevel(level, bonus){
+      const lv = Math.max(0, Math.min(5, level + bonus));
+      const chance10 = [0.05, 0.12, 0.25, 0.42, 0.60, 0.80][lv];
+      if(Math.random() < chance10) return 10;
+      const min = Math.max(1, lv);
+      const max = Math.min(9, 4 + lv);
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    },
+    tryMichelinUp(){
+      while(
+        this.restaurant.atmosphereScore >= 100 &&
+        this.restaurant.foodScore >= 100 &&
+        this.restaurant.serviceScore >= 100 &&
+        this.restaurant.michelinStars < 6
+      ){
+        if(!this.restaurant.criticStageCleared){
+          this.summonCritic();
+          this.logs.unshift('🕵️ 三項評分已達升星門檻，美食評家來訪！通過創意料理才能升星。');
+          return;
+        }
+
+        this.restaurant.atmosphereScore -= 100;
+        this.restaurant.foodScore -= 100;
+        this.restaurant.serviceScore -= 100;
+        this.restaurant.michelinStars += 1;
+        this.restaurant.criticStageCleared = false;
+        this.logs.unshift(`⭐ 米其林升級！目前 ${this.restaurant.michelinStars}/6 顆星。`);
+        if(this.restaurant.michelinStars >= 6){
+          this.logs.unshift('🏆 恭喜達成 Michelin ★★★★★★！獲得明星餐廳證書。');
+        }
+      }
+    },
+    hireChef(){
+      if(this.restaurant.gold < 250){ this.showToast('金幣不足'); return; }
+      this.restaurant.gold -= 250;
+      this.chef = {name:'廚師 Nico', level:1};
+      this.logs.unshift('成功聘僱廚師 Nico！');
+    },
+    upgradeChef(){
+      if(!this.chef || this.chef.level >= 5) return;
+      if(this.restaurant.gold < this.chefUpgradeCost){ this.showToast('金幣不足'); return; }
+      const cost = this.chefUpgradeCost;
+      this.restaurant.gold -= cost;
+      this.chef.level += 1;
+      this.menus.forEach(m=>{
+        if(m.needChefLevel && m.needChefLevel <= this.chef.level && !m.unlocked){
+          m.unlocked = true;
+          this.logs.unshift(`廚師升級到 Lv.${this.chef.level}，開發新菜「${m.name}」！`);
+        }
+      });
+      this.logs.unshift(`廚師升級成功，目前 Lv.${this.chef.level}。`);
+    },
+    hireWaiter(){
+      if(this.restaurant.gold < 180){ this.showToast('金幣不足'); return; }
+      this.restaurant.gold -= 180;
+      this.waiter = {name:'服務員 Mia', level:1};
+      this.logs.unshift('成功聘僱服務員 Mia！');
+    },
+    upgradeWaiter(){
+      if(!this.waiter || this.waiter.level >= 5) return;
+      if(this.restaurant.gold < this.waiterUpgradeCost){ this.showToast('金幣不足'); return; }
+      const cost = this.waiterUpgradeCost;
+      this.restaurant.gold -= cost;
+      this.waiter.level += 1;
+      this.logs.unshift(`服務員升級成功，目前 Lv.${this.waiter.level}。`);
+    },
+    decorUpgradeCost(d){ return 100 + d.level * 120; },
+    buyDecor(d){
+      if(this.restaurant.gold < d.buyCost){ this.showToast('金幣不足'); return; }
+      this.restaurant.gold -= d.buyCost;
+      d.owned = true;
+      d.level = 1;
+      this.logs.unshift(`購買裝潢「${d.name}」，目前 Lv.1。`);
+    },
+    upgradeDecor(d){
+      if(d.level >= 5) return;
+      const cost = this.decorUpgradeCost(d);
+      if(this.restaurant.gold < cost){ this.showToast('金幣不足'); return; }
+      this.restaurant.gold -= cost;
+      d.level += 1;
+      this.logs.unshift(`裝潢「${d.name}」升級到 Lv.${d.level}。`);
+    },
+    summonCritic(){
+      if(this.critic.active) return;
+      this.critic.required = this.restaurant.michelinStars === 5 ? 3 : 1;
+      this.critic.currentIndex = 0;
+      this.critic.active = true;
+      this.critic.gameStarted = false;
+      this.restaurant.criticStageCleared = false;
+      this.pickCriticTarget();
+      this.logs.unshift(this.critic.required === 3 ? '🕵️ 最終六星挑戰：三位美食評家同時來訪！' : '🕵️ 美食評家來訪，準備點創意料理。');
+    },
+    pickCriticTarget(){
+      const target = this.criticTargets[Math.floor(Math.random() * this.criticTargets.length)];
+      this.critic.target = target;
+      this.critic.gameStarted = false;
+      this.selectedIngredients = [];
+    },
+    startCreativeGame(){ this.critic.gameStarted = true; },
+    toggleIngredient(id){
+      if(this.selectedIngredients.includes(id)){
+        this.selectedIngredients = this.selectedIngredients.filter(x => x !== id);
+      }else if(this.selectedIngredients.length < 3){
+        this.selectedIngredients.push(id);
+      }
+    },
+    resetCreativeGame(){ this.selectedIngredients = []; },
+    submitCreativeDish(){
+      const ans = [...this.critic.target.answer].sort().join(',');
+      const picked = [...this.selectedIngredients].sort().join(',');
+
+      if(ans === picked){
+        this.logs.unshift(`✅ 創意料理成功！通過第 ${this.critic.currentIndex + 1} 位美食評家考驗。`);
+        this.critic.currentIndex += 1;
+
+        if(this.critic.currentIndex >= this.critic.required){
+          this.restaurant.criticStageCleared = true;
+          this.critic.active = false;
+          this.critic.gameStarted = false;
+          this.restaurant.atmosphereScore = Math.max(100, this.restaurant.atmosphereScore);
+          this.restaurant.foodScore = Math.max(100, this.restaurant.foodScore);
+          this.restaurant.serviceScore = Math.max(100, this.restaurant.serviceScore);
+          this.logs.unshift('🌟 美食評家全數滿意！成功製作創意料理，馬上獲得升星資格。');
+          this.tryMichelinUp();
+        }else{
+          this.pickCriticTarget();
+          this.showToast('下一位美食評家登場');
+        }
+      }else{
+        this.failCriticChallenge();
+      }
+    },
+    failCriticChallenge(){
+      this.restaurant.atmosphereScore = Math.floor(this.restaurant.atmosphereScore / 2);
+      this.restaurant.foodScore = Math.floor(this.restaurant.foodScore / 2);
+      this.restaurant.serviceScore = Math.floor(this.restaurant.serviceScore / 2);
+      this.restaurant.criticStageCleared = false;
+      this.critic.active = false;
+      this.critic.gameStarted = false;
+      this.selectedIngredients = [];
+      this.logs.unshift('❌ 創意料理失敗，美食評家不滿意，三項評分各倒扣一半。');
+      this.showToast('挑戰失敗，評分倒扣一半');
+    },
+    resetGame(){ location.reload(); },
+    showToast(msg){ this.toast=msg; setTimeout(()=>this.toast='',1800); }
+  }
+}).mount('#app')
+</script>
+</body>
+</html>
