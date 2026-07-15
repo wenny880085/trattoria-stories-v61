@@ -687,14 +687,7 @@ createApp({
         foodScore:0,
         serviceScore:0
       },
-      menus:[
-        {id:1, icon:'🫒', category:'義大利麵', name:'清炒義大利麵', price:90, cost:25, unlocked:true, needChefLevel:0, description:'開局基本料理。'},
-        {id:2, icon:'🌿', category:'義大利麵', name:'青醬義大利麵', price:130, cost:45, unlocked:false, needChefLevel:2, description:'廚師 Lv2 解鎖。'},
-        {id:3, icon:'🍅', category:'義大利麵', name:'紅醬義大利麵', price:170, cost:65, unlocked:false, needChefLevel:3, description:'廚師 Lv3 解鎖。'},
-        {id:4, icon:'🥛', category:'義大利麵', name:'白醬義大利麵', price:220, cost:90, unlocked:false, needChefLevel:4, description:'廚師 Lv4 解鎖。'},
-        {id:5, icon:'🍮', category:'甜點', name:'提拉米蘇', price:110, cost:35, unlocked:true, needChefLevel:0, description:'開局可販售甜點。'},
-        {id:6, icon:'🍷', category:'紅酒飲料', name:'紅酒飲料組', price:140, cost:50, unlocked:true, needChefLevel:0, description:'增加客單價。'}
-      ],
+      menus:[],
       decorations:[
         {id:1, icon:'🪑', name:'桌椅', buyCost:160, level:0, owned:false, description:'影響餐廳氛圍。'},
         {id:2, icon:'🔥', name:'灶台', buyCost:220, level:0, owned:false, description:'提升餐廳質感。'},
@@ -704,6 +697,10 @@ createApp({
       logs:['歡迎開店！目前沒有廚師、沒有服務員。可以先靠清炒、甜點、紅酒飲料賺錢。']
     }
   },
+  mounted() {
+    this.loadRestaurant();
+    this.loadRecipes();
+  },
   computed:{
     availableMenus(){ return this.menus.filter(m=>m.unlocked) },
     decorTotalLevel(){ return this.decorations.reduce((s,d)=>s+d.level,0) },
@@ -712,6 +709,41 @@ createApp({
     starDisplay(){ return '★'.repeat(this.restaurant.michelinStars) + '☆'.repeat(6 - this.restaurant.michelinStars) }
   },
   methods:{
+    async loadRecipes() {
+  try {
+    const response = await fetch('/api/recipes');
+
+    if (!response.ok) {
+      throw new Error('菜單載入失敗');
+    }
+
+    const data = await response.json();
+
+    this.menus = data.map(recipe => ({
+      id: recipe.id,
+      icon: '🍝',
+      category: '義式料理',
+      name: recipe.name,
+      price: recipe.sellingPrice,
+      cost: recipe.cookingCost,
+      unlocked: recipe.unlocked,
+      needChefLevel: 0,
+      description: recipe.description
+     }));
+
+    this.logs.unshift('✅ 已從 Spring Boot 載入菜單資料');
+     } catch (error) {
+    console.error(error);
+    this.showToast('菜單載入失敗');
+     }
+    },
+    async  loadRestaurant() {
+     const response = await fetch('/api/restaurant');
+      const data = await response.json();
+
+      this.restaurant.name = data.name;
+      this.restaurant.gold = data.coins;
+    },
     login(){
       if(!this.username.trim()){ this.showToast('請輸入玩家名稱'); return; }
       this.isLogin=true;
@@ -719,34 +751,36 @@ createApp({
       this.logs.unshift('玩家 '+this.username+' 登入成功，開始經營餐廳！');
     },
     scoreWidth(v){ return Math.min(100, v); },
-    cook(menu){
-      if(!menu.unlocked){ this.showToast('這道餐點尚未開發'); return; }
-      if(this.restaurant.gold < menu.cost){ this.showToast('金幣不足'); return; }
+    async cook(menu) {
+     try {
+       const response = await fetch('/api/orders/cook', {
+       method: 'POST',
+       headers: {
+        'Content-Type': 'application/json'
+       },
+       body: JSON.stringify({
+        recipeId: menu.id
+       })
+        });
 
-      this.restaurant.gold -= menu.cost;
+     const data = await response.json();
 
-      const chefLv = this.chef ? this.chef.level : 0;
-      const waiterLv = this.waiter ? this.waiter.level : 0;
-      const decorLv = this.decorTotalLevel;
+     if (!response.ok) {
+      throw new Error(data.message || '製作料理失敗');
+     }
 
-      const foodGain = this.rollScoreByLevel(chefLv, menu.category === '義大利麵' ? 1 : 0);
-      const atmosphereGain = this.rollScoreByLevel(Math.ceil(decorLv / 4), 0);
-      const serviceGain = this.rollScoreByLevel(waiterLv, menu.category === '紅酒飲料' ? 1 : 0);
+     this.logs.unshift(
+      `✅ 完成「${data.recipeName}」，獲得 ${data.coinsEarned} 金幣`
+     );
 
-      const qualityRate = (foodGain + atmosphereGain + serviceGain) / 30;
-      const income = Math.floor(menu.price * (0.75 + qualityRate));
-      const profit = income - menu.cost;
+     await this.loadRestaurant();
 
-      this.restaurant.gold += income;
-      this.restaurant.totalOrders += 1;
-      this.restaurant.totalIncome += income;
-      this.restaurant.days += 1;
-      this.restaurant.foodScore += foodGain;
-      this.restaurant.atmosphereScore += atmosphereGain;
-      this.restaurant.serviceScore += serviceGain;
-
-      this.logs.unshift(`完成「${menu.name}」：收入 ${income}、淨賺 ${profit}｜氛圍 +${atmosphereGain}、餐點 +${foodGain}、服務 +${serviceGain}`);
-      this.tryMichelinUp();
+     this.showToast('料理製作完成！');
+     } 
+     catch (error) {
+     console.error(error);
+     this.showToast(error.message);
+     }
     },
     rollScoreByLevel(level, bonus){
       const lv = Math.max(0, Math.min(5, level + bonus));
