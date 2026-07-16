@@ -1,16 +1,17 @@
 package com.example.demo.init;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
 import com.example.demo.entity.Decoration;
 import com.example.demo.entity.Recipe;
 import com.example.demo.entity.Restaurant;
 import com.example.demo.repository.DecorationRepository;
 import com.example.demo.repository.RecipeRepository;
 import com.example.demo.repository.RestaurantRepository;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
-
-import java.util.Arrays;
-import java.util.List;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -47,28 +48,104 @@ public class DataInitializer implements CommandLineRunner {
 
     private void initRecipes() {
         if (recipeRepository.count() == 0) {
-            List<Recipe> recipes = Arrays.asList(
-                buildRecipe("番茄義大利麵", "經典的番茄醬義大利麵，簡單美味", 10, 30, 120, true),
-                buildRecipe("奶油培根麵",   "濃郁奶油培根風味，深受顧客喜愛",  15, 45, 150, true),
-                buildRecipe("瑪格麗特披薩", "簡單道地的義式披薩",              20, 60, 180, true),
-                buildRecipe("提拉米蘇",     "義式經典甜點，風味絕佳",          25, 80, 200, false),
-                buildRecipe("海鮮燉飯",     "新鮮海鮮入菜的義式燉飯",          30, 100, 240, false)
-            );
-            recipeRepository.saveAll(recipes);
+           List<Recipe> recipes = Arrays.asList(
+            buildRecipe(
+                "🫒",
+                "義大利麵",
+                "清炒義大利麵",
+                "開局基本料理。",
+                25,
+                90,
+                120,
+                true,
+                0
+            ),
+            buildRecipe(
+                "🌿",
+                "義大利麵",
+                "青醬義大利麵",
+                "廚師 Lv2 解鎖。",
+                45,
+                130,
+                150,
+                false,
+                2
+            ),
+            buildRecipe(
+                "🍅",
+                "義大利麵",
+                "紅醬義大利麵",
+                "廚師 Lv3 解鎖。",
+                65,
+                170,
+                180,
+                false,
+                3
+            ),
+            buildRecipe(
+                "🥛",
+                "義大利麵",
+                "白醬義大利麵",
+                "廚師 Lv4 解鎖。",
+                90,
+                220,
+                200,
+                false,
+                4
+            ),
+            buildRecipe(
+                "🍮",
+                "甜點",
+                "提拉米蘇",
+                "開局可販售甜點。",
+                35,
+                110,
+                120,
+                true,
+                0
+            ),
+            buildRecipe(
+                "🍷",
+                "紅酒飲料",
+                "紅酒飲料組",
+                "增加客單價。",
+                50,
+                140,
+                60,
+                true,
+                0
+            )
+           );
+
+        recipeRepository.saveAll(recipes);
         }
     }
 
-    private Recipe buildRecipe(String name, String description,
-                                int cost, int price, int time, boolean unlocked) {
-        Recipe recipe = new Recipe();
-        recipe.setName(name);
-        recipe.setDescription(description);
-        recipe.setCookingCost(cost);
-        recipe.setSellingPrice(price);
-        recipe.setCookingTimeSeconds(time);
-        recipe.setUnlocked(unlocked);
-        return recipe;
-    }
+    private Recipe buildRecipe(
+        String icon,
+        String category,
+        String name,
+        String description,
+        int cost,
+        int price,
+        int time,
+        boolean unlocked,
+        int needChefLevel) {
+
+         Recipe recipe = new Recipe();
+
+          recipe.setIcon(icon);
+          recipe.setCategory(category);
+          recipe.setName(name);
+          recipe.setDescription(description);
+          recipe.setCookingCost(cost);
+          recipe.setSellingPrice(price);
+          recipe.setCookingTimeSeconds(time);
+          recipe.setUnlocked(unlocked);
+          recipe.setNeedChefLevel(needChefLevel);
+
+          return recipe;
+        }
 
     private void initDecorations() {
         if (decorationRepository.count() == 0) {
