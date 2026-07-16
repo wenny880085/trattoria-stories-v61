@@ -688,18 +688,14 @@ createApp({
         serviceScore:0
       },
       menus:[],
-      decorations:[
-        {id:1, icon:'🪑', name:'桌椅', buyCost:160, level:0, owned:false, description:'影響餐廳氛圍。'},
-        {id:2, icon:'🔥', name:'灶台', buyCost:220, level:0, owned:false, description:'提升餐廳質感。'},
-        {id:3, icon:'💡', name:'吊燈', buyCost:180, level:0, owned:false, description:'提升燈光氣氛。'},
-        {id:4, icon:'🍽️', name:'餐具', buyCost:140, level:0, owned:false, description:'提升用餐精緻度。'}
-      ],
+      decorations:[],
       logs:['歡迎開店！目前沒有廚師、沒有服務員。可以先靠清炒、甜點、紅酒飲料賺錢。']
     }
   },
   mounted() {
     this.loadRestaurant();
     this.loadRecipes();
+    this.loadDecorations();
   },
   computed:{
     availableMenus(){ return this.menus.filter(m=>m.unlocked) },
@@ -709,17 +705,55 @@ createApp({
     starDisplay(){ return '★'.repeat(this.restaurant.michelinStars) + '☆'.repeat(6 - this.restaurant.michelinStars) }
   },
   methods:{
+    async loadDecorations() {
+     try {
+       const response = await fetch('/api/decorations');
+
+        if (!response.ok) {
+        throw new Error('裝潢資料載入失敗');
+        }
+
+       const data = await response.json();
+
+       this.decorations = data.map(item => ({
+         id: item.id,
+         icon: this.getDecorationIcon(item.name),
+         name: item.name,
+         description: item.description,
+         buyCost: item.price,
+         category: item.category,
+         owned: item.purchased,
+         level: item.purchased ? 1 : 0
+        }));
+
+       this.logs.unshift('✅ 已從資料庫載入裝潢資料');
+      } 
+      catch (error) {
+        console.error(error);
+        this.showToast(error.message);
+     }
+    },  
+
+   getDecorationIcon(name) {
+     if (name.includes('桌')) return '🪑';
+     if (name.includes('燈')) return '💡';
+     if (name.includes('壁紙')) return '🖼️';
+     if (name.includes('吧台')) return '🍷';
+     if (name.includes('招牌')) return '✨';
+     return '🪴';
+    },
+
     async loadRecipes() {
-  try {
-    const response = await fetch('/api/recipes');
+      try {
+     const response = await fetch('/api/recipes');
 
-    if (!response.ok) {
+      if (!response.ok) {
       throw new Error('菜單載入失敗');
-    }
+      }
 
-    const data = await response.json();
+     const data = await response.json();
 
-    this.menus = data.map(recipe => ({
+     this.menus = data.map(recipe => ({
       id: recipe.id,
       icon: '🍝',
       category: '義式料理',
@@ -731,10 +765,10 @@ createApp({
       description: recipe.description
      }));
 
-    this.logs.unshift('✅ 已從 Spring Boot 載入菜單資料');
+     this.logs.unshift('✅ 已從 Spring Boot 載入菜單資料');
      } catch (error) {
-    console.error(error);
-    this.showToast('菜單載入失敗');
+     console.error(error);
+     this.showToast('菜單載入失敗');
      }
     },
     async  loadRestaurant() {
