@@ -774,9 +774,15 @@ createApp({
     async  loadRestaurant() {
      const response = await fetch('/api/restaurant');
       const data = await response.json();
-
-      this.restaurant.name = data.name;
-      this.restaurant.gold = data.coins;
+        // 已登入就保留玩家的餐廳名稱
+        if (this.isLogin && this.username.trim()) {
+         this.restaurant.name = this.username + "'s Pasta";
+        } 
+        else {
+         // 尚未登入時，顯示後端預設名稱
+         this.restaurant.name = data.name;
+         this.restaurant.gold = data.coins;
+        }
     },
     login(){
       if(!this.username.trim()){ this.showToast('請輸入玩家名稱'); return; }
