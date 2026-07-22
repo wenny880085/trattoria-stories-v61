@@ -959,7 +959,55 @@ createApp({
       this.logs.unshift('❌ 創意料理失敗，美食評家不滿意，三項評分各倒扣一半。');
       this.showToast('挑戰失敗，評分倒扣一半');
     },
-    resetGame(){ location.reload(); },
+    async resetGame() {
+     if (!confirm("確定要重新開始遊戲嗎？")) {
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/game/reset', {
+            method: 'POST'
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || '重置失敗');
+        }
+
+            // 重置前端登入與畫面狀態
+            this.isLogin = false;
+            this.username = '';
+            this.tab = 'menu';
+            this.chef = null;
+            this.waiter = null;
+            this.selectedIngredients = [];
+            this.critic = {
+              active: false,
+              gameStarted: false,
+              required: 1,
+              currentIndex: 0,
+              target: {
+               name: '',
+               hint: '',
+               answer: []
+              }
+           };
+        // 重新讀取後端初始資料
+        await this.loadRestaurant();
+        await this.loadRecipes();
+        await this.loadDecorations();
+
+        this.logs = [
+          '歡迎開店！目前沒有廚師、沒有服務員。可以先靠清炒、甜點、紅酒飲料賺錢。'
+        ];
+ 
+        this.showToast("遊戲已重新開始！");
+      } catch (error) {
+         console.error(error);
+         this.showToast(error.message);
+         }
+    },
     showToast(msg){ this.toast=msg; setTimeout(()=>this.toast='',1800); }
   }
 }).mount('#app')

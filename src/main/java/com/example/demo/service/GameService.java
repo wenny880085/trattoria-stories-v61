@@ -1,14 +1,17 @@
 package com.example.demo.service;
 
-import com.example.demo.entity.Decoration;
-import com.example.demo.entity.Restaurant;
-import com.example.demo.repository.DecorationRepository;
-import com.example.demo.repository.GameOrderRepository;
-import com.example.demo.repository.RestaurantRepository;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import com.example.demo.entity.Decoration;
+import com.example.demo.entity.Recipe;
+import com.example.demo.entity.Restaurant;
+import com.example.demo.repository.DecorationRepository;
+import com.example.demo.repository.GameOrderRepository;
+import com.example.demo.repository.RecipeRepository;
+import com.example.demo.repository.RestaurantRepository;
 
 @Service
 public class GameService {
@@ -16,13 +19,16 @@ public class GameService {
     private final RestaurantRepository restaurantRepository;
     private final DecorationRepository decorationRepository;
     private final GameOrderRepository orderRepository;
+    private final RecipeRepository recipeRepository;
 
     public GameService(RestaurantRepository restaurantRepository,
                        DecorationRepository decorationRepository,
-                       GameOrderRepository orderRepository) {
+                       GameOrderRepository orderRepository,
+                       RecipeRepository recipeRepository) {
         this.restaurantRepository = restaurantRepository;
         this.decorationRepository = decorationRepository;
         this.orderRepository = orderRepository;
+        this.recipeRepository = recipeRepository;
     }
 
     @Transactional
@@ -43,6 +49,15 @@ public class GameService {
             d.setPurchasedAt(null);
         }
         decorationRepository.saveAll(decorations);
+
+        // 重置菜單解鎖狀態
+        List<Recipe> recipes = recipeRepository.findAll();
+        for (Recipe recipe : recipes) {
+            boolean initiallyUnlocked = recipe.getNeedChefLevel() == 0;
+            recipe.setUnlocked(initiallyUnlocked);
+        }
+
+        recipeRepository.saveAll(recipes);
 
         // 清除所有訂單記錄
         orderRepository.deleteAll();
