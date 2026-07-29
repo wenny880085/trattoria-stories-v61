@@ -509,16 +509,32 @@
 
         <template v-if="tab==='staff'">
           <h2>👨‍🍳 員工聘僱與升級</h2>
-          <div class="cards">
-            <div class="item">
-              <h3>👨‍🍳 廚師</h3>
-              <p v-if="!chef">目前沒有廚師，餐點拿 10 分機率低。</p>
-              <p v-else>{{ chef.name }}｜Lv.{{ chef.level }}/5</p>
-              <p><span class="badge">Lv2 青醬</span><span class="badge">Lv3 紅醬</span><span class="badge">Lv4 白醬</span></p>
-              <button class="btn2" v-if="!chef" @click="hireChef" :disabled="restaurant.gold < 250">聘僱 250</button>
-              <button class="btn2" v-else @click="upgradeChef" :disabled="chef.level>=5 || restaurant.gold < chefUpgradeCost">
-                {{ chef.level>=5 ? '滿級' : '升級 '+chefUpgradeCost }}
-              </button>
+            <div class="cards">
+              <div class="item">
+                <h3>👨‍🍳 廚師</h3>
+                <p v-if="!chef || !chef.hired">目前沒有廚師，餐點拿 10 分機率低。</p>
+                <p v-else>{{ chef.name }}｜Lv.{{ chef.level }}/5</p>
+                <p><span class="badge">Lv2 青醬</span><span class="badge">Lv3 紅醬</span><span class="badge">Lv4 白醬</span></p>
+                <button
+                 class="btn2"
+                 v-if="chef && !chef.hired"
+                 @click="hireChef"
+                 :disabled="restaurant.gold < chef.hireCost"
+                >
+                 聘僱 {{ chef.hireCost }}
+                </button>
+                <button
+                 class="btn2"
+                 v-else-if="chef && chef.hired"
+                 @click="upgradeChef"
+                 :disabled="chef.level >= 5 || restaurant.gold < chef.upgradeCost"
+                >
+               {{ chef.level >= 5 ? '滿級' : '升級 ' + chef.upgradeCost }}
+               </button>
+
+               <p v-else>
+    廚師資料讀取中……
+               </p>
             </div>
 
             <div class="item">
@@ -696,6 +712,7 @@ createApp({
     this.loadRestaurant();
     this.loadRecipes();
     this.loadDecorations();
+    this.loadChef();
   },
   computed:{
     availableMenus(){ return this.menus.filter(m=>m.unlocked) },
@@ -731,7 +748,7 @@ createApp({
       catch (error) {
         console.error(error);
         this.showToast(error.message);
-     }
+      }
     },  
 
    getDecorationIcon(name) {
@@ -771,17 +788,60 @@ createApp({
      this.showToast('菜單載入失敗');
      }
     },
+    async loadChef() {
+      try {
+        const response = await fetch(
+          '/api/chef?t=' + Date.now(),
+          {method: 'GET',
+           cache: 'no-store'
+          }
+        );
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || '讀取廚師資料失敗');
+        }
+       this.chef = data;
+       console.log('廚師資料：', this.chef);
+
+      } 
+      catch (error) {
+        console.error(error);
+        this.showToast(error.message);
+      }
+    },
+
     async  loadRestaurant() {
-     const response = await fetch('/api/restaurant');
-      const data = await response.json();
-        // 已登入就保留玩家的餐廳名稱
+     try {
+       const response = await fetch(
+       '/api/restaurant?t=' + Date.now(),
+        {
+         method: 'GET',
+         cache: 'no-store'
+        }
+       );
+
+       const data = await response.json();
+
+       if (!response.ok) {
+         throw new Error(data.message || '讀取餐廳資料失敗');
+        }
+
         if (this.isLogin && this.username.trim()) {
          this.restaurant.name = this.username + "'s Pasta";
         } 
         else {
-         // 尚未登入時，顯示後端預設名稱
          this.restaurant.name = data.name;
-         this.restaurant.gold = data.coins;
+        }
+
+        this.restaurant.gold = Number(data.coins);
+
+       console.log('目前後端金幣：', data.coins);
+       console.log('目前前端金幣：', this.restaurant.gold);
+
+      } catch (error) {
+         console.error(error);
+         this.showToast(error.message);
         }
     },
     login(){
@@ -854,12 +914,30 @@ createApp({
         }
       }
     },
-    hireChef(){
-      if(this.restaurant.gold < 250){ this.showToast('金幣不足'); return; }
-      this.restaurant.gold -= 250;
-      this.chef = {name:'廚師 Nico', level:1};
-      this.logs.unshift('成功聘僱廚師 Nico！');
-    },
+    async hireChef() {
+       try {
+          const response = await fetch('/api/chef/hire', {
+           method: 'POST'
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+           throw new Error(data.message || '聘僱廚師失敗');
+          }
+
+           this.chef = data;
+
+          await this.loadRestaurant();
+
+          this.logs.unshift(`👨‍🍳 成功聘僱 ${data.name}！`);
+          this.showToast('聘僱成功');
+
+        } catch (error) {
+           console.error(error);
+           this.showToast(error.message);
+          }
+     },
     upgradeChef(){
       if(!this.chef || this.chef.level >= 5) return;
       if(this.restaurant.gold < this.chefUpgradeCost){ this.showToast('金幣不足'); return; }
@@ -1003,6 +1081,7 @@ createApp({
         await this.loadRestaurant();
         await this.loadRecipes();
         await this.loadDecorations();
+        await this.loadChef();
 
         this.logs = [
           '歡迎開店！目前沒有廚師、沒有服務員。可以先靠清炒、甜點、紅酒飲料賺錢。'

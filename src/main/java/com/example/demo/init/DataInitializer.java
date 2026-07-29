@@ -6,9 +6,11 @@ import java.util.List;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import com.example.demo.entity.Chef;
 import com.example.demo.entity.Decoration;
 import com.example.demo.entity.Recipe;
 import com.example.demo.entity.Restaurant;
+import com.example.demo.repository.ChefRepository;
 import com.example.demo.repository.DecorationRepository;
 import com.example.demo.repository.RecipeRepository;
 import com.example.demo.repository.RestaurantRepository;
@@ -19,13 +21,16 @@ public class DataInitializer implements CommandLineRunner {
     private final RestaurantRepository restaurantRepository;
     private final RecipeRepository recipeRepository;
     private final DecorationRepository decorationRepository;
+    private final ChefRepository chefRepository;
 
     public DataInitializer(RestaurantRepository restaurantRepository,
                            RecipeRepository recipeRepository,
-                           DecorationRepository decorationRepository) {
+                           DecorationRepository decorationRepository,
+                           ChefRepository chefRepository) {
         this.restaurantRepository = restaurantRepository;
         this.recipeRepository = recipeRepository;
         this.decorationRepository = decorationRepository;
+        this.chefRepository = chefRepository;
     }
 
     @Override
@@ -33,6 +38,7 @@ public class DataInitializer implements CommandLineRunner {
         initRestaurant();
         initRecipes();
         initDecorations();
+        initChefs();
     }
 
     private void initRestaurant() {
@@ -157,6 +163,19 @@ public class DataInitializer implements CommandLineRunner {
                 buildDecoration("霓虹招牌",   "引人注目的霓虹招牌，吸引更多顧客", 100, "招牌")
             );
             decorationRepository.saveAll(decorations);
+        }
+    }
+
+    private void initChefs() {
+       if (chefRepository.count() == 0) {
+          Chef chef = new Chef(
+            "Marco",
+            false,
+            0,
+            200,
+            300
+         );
+         chefRepository.save(chef);
         }
     }
 
