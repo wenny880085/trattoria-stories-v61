@@ -27,4 +27,9 @@ public class ChefController {
     public ChefDto hireChef() {
         return chefService.hireChef();
     }
+
+    @PostMapping("/upgrade")
+    public ChefDto upgradeChef() {
+        return chefService.upgradeChef();
+    }
 }

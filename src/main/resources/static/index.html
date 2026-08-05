@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trattoria Stories v5 正式展示版</title>
+  <title>Trattoria Stories 測試版</title>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <style>
     *{box-sizing:border-box}
@@ -762,31 +762,40 @@ createApp({
 
     async loadRecipes() {
       try {
-     const response = await fetch('/api/recipes');
+        const response = await fetch('/api/recipes?t=' + Date.now(),{
+          method: 'GET',
+          cache: 'no-store'
+        });
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || '讀取菜單失敗');
+        }
 
-      if (!response.ok) {
-      throw new Error('菜單載入失敗');
-      }
+        this.menus = data.map(recipe => ({
+          id: recipe.id,
+          category: recipe.category,
+          cookingCost: recipe.cookingCost,
+          cookingTimeSeconds: recipe.cookingTimeSeconds,
+          description: recipe.description,
+          icon: recipe.icon,
+          name: recipe.name,
+          needChefLevel: recipe.needChefLevel,
+          sellingPrice: recipe.sellingPrice,
 
-     const data = await response.json();
+            // 這行最重要
+          unlocked: Boolean(recipe.unlocked),
 
-     this.menus = data.map(recipe => ({
-      id: recipe.id,
-      icon: '🍝',
-      category: '義式料理',
-      name: recipe.name,
-      price: recipe.sellingPrice,
-      cost: recipe.cookingCost,
-      unlocked: recipe.unlocked,
-      needChefLevel: 0,
-      description: recipe.description
-     }));
-
-     this.logs.unshift('✅ 已從 Spring Boot 載入菜單資料');
-     } catch (error) {
-     console.error(error);
-     this.showToast('菜單載入失敗');
-     }
+            // 保留你原本畫面使用的名稱
+          cost: recipe.cookingCost,
+          price: recipe.sellingPrice
+        }));
+        
+        console.log('重新載入後的菜單：', this.menus);
+      } catch (error) {
+          console.error(error);
+          this.showToast(error.message);
+        }
     },
     async loadChef() {
       try {
@@ -851,6 +860,7 @@ createApp({
       this.logs.unshift('玩家 '+this.username+' 登入成功，開始經營餐廳！');
     },
     scoreWidth(v){ return Math.min(100, v); },
+
     async cook(menu) {
      try {
        const response = await fetch('/api/orders/cook', {
@@ -914,6 +924,7 @@ createApp({
         }
       }
     },
+
     async hireChef() {
        try {
           const response = await fetch('/api/chef/hire', {
@@ -938,20 +949,35 @@ createApp({
            this.showToast(error.message);
           }
      },
-    upgradeChef(){
-      if(!this.chef || this.chef.level >= 5) return;
-      if(this.restaurant.gold < this.chefUpgradeCost){ this.showToast('金幣不足'); return; }
-      const cost = this.chefUpgradeCost;
-      this.restaurant.gold -= cost;
-      this.chef.level += 1;
-      this.menus.forEach(m=>{
-        if(m.needChefLevel && m.needChefLevel <= this.chef.level && !m.unlocked){
-          m.unlocked = true;
-          this.logs.unshift(`廚師升級到 Lv.${this.chef.level}，開發新菜「${m.name}」！`);
+
+    async upgradeChef() {
+      try {
+        const response = await fetch('/api/chef/upgrade', {
+          method: 'POST'
+        });
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || '廚師升級失敗');
         }
-      });
-      this.logs.unshift(`廚師升級成功，目前 Lv.${this.chef.level}。`);
+        // 更新廚師資料（等級、升級費用)
+        this.chef = data;
+        // 重新讀取餐廳金幣
+        await this.loadRestaurant();
+        // 重新讀取菜單（後端已經解鎖新菜色）
+        await this.loadRecipes();
+        
+        this.logs.unshift(
+          `👨‍🍳 ${data.name} 升級成功，目前 Lv.${data.level}！`
+        );
+
+        this.showToast(`升級成功！Lv.${data.level}`);
+      } catch (error) {
+          console.error(error);
+          this.showToast(error.message);
+        }
     },
+
     hireWaiter(){
       if(this.restaurant.gold < 180){ this.showToast('金幣不足'); return; }
       this.restaurant.gold -= 180;
