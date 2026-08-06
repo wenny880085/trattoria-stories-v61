@@ -1,20 +1,25 @@
 package com.example.demo.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.demo.dto.CookRequestDto;
 import com.example.demo.dto.GameOrderDto;
+import com.example.demo.entity.Chef;
 import com.example.demo.entity.GameOrder;
 import com.example.demo.entity.Recipe;
 import com.example.demo.entity.Restaurant;
 import com.example.demo.exception.GameException;
+import com.example.demo.repository.ChefRepository;
+import com.example.demo.repository.DecorationRepository;
 import com.example.demo.repository.GameOrderRepository;
 import com.example.demo.repository.RecipeRepository;
 import com.example.demo.repository.RestaurantRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -22,13 +27,19 @@ public class OrderService {
     private final GameOrderRepository orderRepository;
     private final RecipeRepository recipeRepository;
     private final RestaurantRepository restaurantRepository;
+    private final ChefRepository chefRepository;
+    private final DecorationRepository decorationRepository;
 
     public OrderService(GameOrderRepository orderRepository,
                         RecipeRepository recipeRepository,
-                        RestaurantRepository restaurantRepository) {
+                        RestaurantRepository restaurantRepository,
+                        ChefRepository chefRepository,
+                        DecorationRepository decorationRepository) {
         this.orderRepository = orderRepository;
         this.recipeRepository = recipeRepository;
         this.restaurantRepository = restaurantRepository;
+        this.chefRepository = chefRepository;
+        this.decorationRepository = decorationRepository;
     }
 
     @Transactional
@@ -53,6 +64,40 @@ public class OrderService {
 
         int netCoins = recipe.getSellingPrice() - recipe.getCookingCost();
         restaurant.setCoins(restaurant.getCoins() + netCoins);
+
+        // 取得廚師等級；尚未聘僱則視為 Lv.0
+        Chef hiredChef = chefRepository.findAll()
+            .stream()
+            .filter(chef -> chef != null && chef.isHired())
+            .findFirst()
+            .orElse(null);
+        
+        int chefLevel = hiredChef == null ? 0 : hiredChef.getLevel();
+
+        // 暫時以已購買的裝潢數量作為裝潢等級
+        int decorationLevel = (int) decorationRepository.findAll()
+            .stream()
+            .filter(decoration -> decoration != null && decoration.isPurchased())
+            .count();
+
+        decorationLevel = Math.min(decorationLevel, 5);
+
+        // 服務員後端尚未完成，暫時以 Lv.0 計算
+        int waiterLevel = 0;
+        
+        int atmosphereGain = rollScoreByLevel(decorationLevel);
+        int foodGain = rollScoreByLevel(chefLevel);
+        int serviceGain = rollScoreByLevel(waiterLevel);
+        
+        restaurant.setAtmosphereScore(
+            restaurant.getAtmosphereScore() + atmosphereGain);
+
+        restaurant.setFoodScore(
+            restaurant.getFoodScore() + foodGain);
+
+        restaurant.setServiceScore(
+            restaurant.getServiceScore() + serviceGain);
+
         restaurantRepository.save(restaurant);
 
         GameOrder order = new GameOrder();
@@ -83,4 +128,29 @@ public class OrderService {
         dto.setCookedAt(o.getCookedAt());
         return dto;
     }
+    
+    private int rollScoreByLevel(int level) {
+    int safeLevel = Math.max(0, Math.min(5, level));
+
+        double[] chanceOfTen = {
+            0.05,
+            0.12,
+            0.25,
+            0.42,
+            0.60,
+            0.80
+        };
+
+        if (ThreadLocalRandom.current().nextDouble()
+            < chanceOfTen[safeLevel]) {return 10;
+        }
+
+        int min = Math.max(1, safeLevel);
+        int max = Math.min(9, 4 + safeLevel);
+
+        return ThreadLocalRandom.current()
+            .nextInt(min, max + 1);
+    }
+
+
 }

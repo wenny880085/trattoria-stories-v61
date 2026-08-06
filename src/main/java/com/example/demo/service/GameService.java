@@ -44,6 +44,11 @@ public class GameService {
             restaurant.setCoins(100L);
             restaurant.setLevel(1);
             restaurant.setExperience(0);
+            restaurant.setAtmosphereScore(0);
+            restaurant.setFoodScore(0);
+            restaurant.setServiceScore(0);
+
+
             restaurantRepository.save(restaurant);
         }
 

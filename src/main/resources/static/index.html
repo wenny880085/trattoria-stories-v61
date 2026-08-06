@@ -845,6 +845,15 @@ createApp({
 
         this.restaurant.gold = Number(data.coins);
 
+        this.restaurant.atmosphereScore =
+        Number(data.atmosphereScore ?? 0);
+
+        this.restaurant.foodScore =
+        Number(data.foodScore ?? 0);
+
+        this.restaurant.serviceScore =
+        Number(data.serviceScore ?? 0);
+
        console.log('目前後端金幣：', data.coins);
        console.log('目前前端金幣：', this.restaurant.gold);
 

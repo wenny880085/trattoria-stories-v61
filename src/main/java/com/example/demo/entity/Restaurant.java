@@ -31,6 +31,15 @@ public class Restaurant {
     @Column(nullable = false)
     private int experience;
 
+    @Column(nullable = false)
+    private int atmosphereScore;
+
+    @Column(nullable = false)
+    private int foodScore;
+
+    @Column(nullable = false)
+    private int serviceScore;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -68,4 +77,14 @@ public class Restaurant {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    
+    public int getAtmosphereScore() {return atmosphereScore;}
+    public void setAtmosphereScore(int atmosphereScore) {this.atmosphereScore = atmosphereScore;}
+    
+    public int getFoodScore() {return foodScore;}
+    public void setFoodScore(int foodScore) {this.foodScore = foodScore;}
+    
+    public int getServiceScore() {return serviceScore;}
+    public void setServiceScore(int serviceScore) {this.serviceScore = serviceScore;}
+
 }

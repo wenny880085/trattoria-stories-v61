@@ -29,6 +29,12 @@ public class RestaurantService {
         dto.setCoins(r.getCoins());
         dto.setLevel(r.getLevel());
         dto.setExperience(r.getExperience());
+
+        // ⭐ 新增三項評分
+        dto.setAtmosphereScore(r.getAtmosphereScore());
+        dto.setFoodScore(r.getFoodScore());
+        dto.setServiceScore(r.getServiceScore());
+        
         return dto;
     }
 }
