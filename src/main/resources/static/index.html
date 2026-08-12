@@ -854,6 +854,12 @@ createApp({
         this.restaurant.serviceScore =
         Number(data.serviceScore ?? 0);
 
+        this.restaurant.michelinStars =
+        Number(data.michelinStars ?? 0);
+
+        this.restaurant.criticStageCleared =
+        Boolean(data.criticStageCleared);
+
        console.log('目前後端金幣：', data.coins);
        console.log('目前前端金幣：', this.restaurant.gold);
 
@@ -881,25 +887,24 @@ createApp({
         recipeId: menu.id
        })
         });
+        
+        
+        const data = await response.json();
 
-     const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || '製作料理失敗');
+        }
 
-     if (!response.ok) {
-      throw new Error(data.message || '製作料理失敗');
-     }
+        this.logs.unshift(`✅ 完成「${data.recipeName}」，獲得 ${data.coinsEarned} 金幣`);
 
-     this.logs.unshift(
-      `✅ 完成「${data.recipeName}」，獲得 ${data.coinsEarned} 金幣`
-     );
-
-     await this.loadRestaurant();
-
-     this.showToast('料理製作完成！');
-     } 
-     catch (error) {
-     console.error(error);
-     this.showToast(error.message);
-     }
+        await this.loadRestaurant();
+        this.tryMichelinUp();
+        this.showToast('料理製作完成！');
+      } 
+      catch (error) {
+        console.error(error);
+        this.showToast(error.message);
+      }
     },
     rollScoreByLevel(level, bonus){
       const lv = Math.max(0, Math.min(5, level + bonus));

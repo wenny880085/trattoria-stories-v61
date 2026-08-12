@@ -48,6 +48,8 @@ public class DataInitializer implements CommandLineRunner {
             restaurant.setCoins(100L);
             restaurant.setLevel(1);
             restaurant.setExperience(0);
+            restaurant.setMichelinStars(0);
+            restaurant.setCriticStageCleared(false);
             restaurantRepository.save(restaurant);
         }
     }

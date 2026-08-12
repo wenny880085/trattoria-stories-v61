@@ -26,9 +26,13 @@ public class RestaurantService {
         RestaurantDto dto = new RestaurantDto();
         dto.setId(r.getId());
         dto.setName(r.getName());
+        
         dto.setCoins(r.getCoins());
         dto.setLevel(r.getLevel());
         dto.setExperience(r.getExperience());
+
+        dto.setMichelinStars(r.getMichelinStars());
+        dto.setCriticStageCleared(r.isCriticStageCleared());
 
         // ⭐ 新增三項評分
         dto.setAtmosphereScore(r.getAtmosphereScore());

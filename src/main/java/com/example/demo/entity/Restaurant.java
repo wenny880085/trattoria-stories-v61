@@ -40,6 +40,12 @@ public class Restaurant {
     @Column(nullable = false)
     private int serviceScore;
 
+    @Column(nullable = false)
+    private int michelinStars;
+
+    @Column(nullable = false)
+    private boolean criticStageCleared;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -87,4 +93,9 @@ public class Restaurant {
     public int getServiceScore() {return serviceScore;}
     public void setServiceScore(int serviceScore) {this.serviceScore = serviceScore;}
 
+    public int getMichelinStars() {return michelinStars;}
+    public void setMichelinStars(int michelinStars) {this.michelinStars = michelinStars;}
+
+    public boolean isCriticStageCleared() {return criticStageCleared;}
+    public void setCriticStageCleared(boolean criticStageCleared) {this.criticStageCleared = criticStageCleared;}
 }

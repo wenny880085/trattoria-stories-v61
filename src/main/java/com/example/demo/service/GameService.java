@@ -47,6 +47,8 @@ public class GameService {
             restaurant.setAtmosphereScore(0);
             restaurant.setFoodScore(0);
             restaurant.setServiceScore(0);
+            restaurant.setMichelinStars(0);
+            restaurant.setCriticStageCleared(false);
 
 
             restaurantRepository.save(restaurant);

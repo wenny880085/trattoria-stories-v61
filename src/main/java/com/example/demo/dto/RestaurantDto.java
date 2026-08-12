@@ -12,6 +12,9 @@ public class RestaurantDto {
     private int foodScore;
     private int serviceScore;
 
+    private int michelinStars;
+    private boolean criticStageCleared;
+
     public Long getId() {
         return id;
     }
@@ -75,4 +78,23 @@ public class RestaurantDto {
     public void setServiceScore(int serviceScore) {
         this.serviceScore = serviceScore;
     }
+
+    public int getMichelinStars() {
+        return michelinStars;
+    }
+
+    public void setMichelinStars(int michelinStars) {
+        this.michelinStars = michelinStars;
+    }
+
+    public boolean isCriticStageCleared() {
+        return criticStageCleared;
+    }
+
+    public void setCriticStageCleared(boolean criticStageCleared) {
+        this.criticStageCleared = criticStageCleared;
+    }
+
+
+
 }
