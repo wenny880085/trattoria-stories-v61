@@ -85,4 +85,32 @@ public class GameService {
         }
         chefRepository.saveAll(chefs);
     }
+
+    @Transactional
+    public void criticSuccess() {
+        Restaurant restaurant = restaurantRepository.findById(1L)
+            .orElseThrow(() -> new RuntimeException("找不到餐廳資料"));
+
+        if (restaurant.getAtmosphereScore() < 100 ||
+           restaurant.getFoodScore() < 100 ||
+           restaurant.getServiceScore() < 100) {
+               throw new RuntimeException("三項評分尚未達到升星門檻");
+            }
+        
+        if (restaurant.getMichelinStars() >= 6) {
+            throw new RuntimeException("已經達到最高 6 星");
+        }
+
+            restaurant.setAtmosphereScore(restaurant.getAtmosphereScore() - 100);
+
+            restaurant.setFoodScore(restaurant.getFoodScore() - 100);
+
+            restaurant.setServiceScore(restaurant.getServiceScore() - 100);
+
+            restaurant.setMichelinStars(restaurant.getMichelinStars() + 1);
+
+            restaurant.setCriticStageCleared(false);
+
+            restaurantRepository.save(restaurant);
+    }
 }

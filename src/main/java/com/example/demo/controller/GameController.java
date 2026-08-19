@@ -1,13 +1,14 @@
 package com.example.demo.controller;
 
-import com.example.demo.service.GameService;
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
+import com.example.demo.service.GameService;
 
 @RestController
 @RequestMapping("/api/game")
@@ -24,5 +25,11 @@ public class GameController {
     public ResponseEntity<Map<String, String>> resetGame() {
         gameService.resetGame();
         return ResponseEntity.ok(Map.of("message", "遊戲已重置"));
+    }
+
+    @PostMapping("/critic-success")
+    public ResponseEntity<Map<String, String>> criticSuccess() {
+        gameService.criticSuccess();
+        return ResponseEntity.ok(Map.of("message", "美食評家挑戰成功，米其林升星"));
     }
 }

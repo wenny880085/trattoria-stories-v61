@@ -1047,31 +1047,50 @@ createApp({
       }
     },
     resetCreativeGame(){ this.selectedIngredients = []; },
-    submitCreativeDish(){
+    async submitCreativeDish() {
       const ans = [...this.critic.target.answer].sort().join(',');
       const picked = [...this.selectedIngredients].sort().join(',');
 
-      if(ans === picked){
+      if (ans === picked) {
         this.logs.unshift(`✅ 創意料理成功！通過第 ${this.critic.currentIndex + 1} 位美食評家考驗。`);
+
         this.critic.currentIndex += 1;
 
-        if(this.critic.currentIndex >= this.critic.required){
-          this.restaurant.criticStageCleared = true;
-          this.critic.active = false;
-          this.critic.gameStarted = false;
-          this.restaurant.atmosphereScore = Math.max(100, this.restaurant.atmosphereScore);
-          this.restaurant.foodScore = Math.max(100, this.restaurant.foodScore);
-          this.restaurant.serviceScore = Math.max(100, this.restaurant.serviceScore);
-          this.logs.unshift('🌟 美食評家全數滿意！成功製作創意料理，馬上獲得升星資格。');
-          this.tryMichelinUp();
-        }else{
-          this.pickCriticTarget();
-          this.showToast('下一位美食評家登場');
+        if (this.critic.currentIndex >= this.critic.required) {
+          try {
+            const response = await fetch('/api/game/critic-success', {
+              method: 'POST'
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(data.message || '升星失敗');
+            }
+
+            // 關閉美食評家畫面
+            this.critic.active = false;
+            this.critic.gameStarted = false;
+            this.selectedIngredients = [];
+
+            // 重新讀取 MySQL 最新狀態
+            await this.loadRestaurant();
+
+            this.logs.unshift(`⭐ 美食評家滿意！米其林升星成功，目前 ${this.restaurant.michelinStars}/6 顆星。`);
+            this.showToast(`升星成功！目前 ${this.restaurant.michelinStars} 星`);
+          } catch (error) {
+              console.error(error);
+              this.showToast(error.message);
+            }
+
+        } else {
+           this.pickCriticTarget();
+           this.showToast('下一位美食評家登場');
+          }
+            
+      } else {
+         this.failCriticChallenge();
         }
-      }else{
-        this.failCriticChallenge();
-      }
-    },
+   },
     failCriticChallenge(){
       this.restaurant.atmosphereScore = Math.floor(this.restaurant.atmosphereScore / 2);
       this.restaurant.foodScore = Math.floor(this.restaurant.foodScore / 2);
