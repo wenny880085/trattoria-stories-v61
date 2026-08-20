@@ -32,4 +32,10 @@ public class GameController {
         gameService.criticSuccess();
         return ResponseEntity.ok(Map.of("message", "美食評家挑戰成功，米其林升星"));
     }
+
+    @PostMapping("/critic-six-star-success")
+    public ResponseEntity<Map<String, String>> sixStarCriticSuccess() {
+        gameService.sixStarCriticSuccess();
+        return ResponseEntity.ok(Map.of("message", "六星美食評家挑戰成功"));
+    }
 }

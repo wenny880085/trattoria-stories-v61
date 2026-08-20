@@ -625,7 +625,7 @@
     </div>
   </div>
 
-  <div class="modal-bg" v-if="restaurant.michelinStars >= 6">
+  <div class="modal-bg" v-if="restaurant.michelinStars >= 6 && showSixStarEnding">
     <div class="modal">
       <div class="certificate">
         <div style="font-size:46px">🏆🎉</div>
@@ -643,6 +643,16 @@
           <div class="cert-box">{{ restaurant.michelinStars }}/6<small>米其林星級</small></div>
           <div class="cert-box">明星餐廳<small>最終稱號</small></div>
         </div>
+        <div class="row" style="justify-content:center; margin-top:18px;">
+          <button class="btn2" @click="resetGame">
+          🔄 重新開始遊戲
+          </button>
+
+          <button class="btn3" @click="continueAfterSixStars">
+          🍝 回到餐廳繼續經營
+          </button>
+        </div>
+
       </div>
     </div>
   </div>
@@ -660,6 +670,7 @@ createApp({
       username:'',
       tab:'menu',
       toast:'',
+      showSixStarEnding:false,
       critic:{
         active:false,
         gameStarted:false,
@@ -915,26 +926,32 @@ createApp({
       return Math.floor(Math.random() * (max - min + 1)) + min;
     },
     tryMichelinUp(){
-      while(
+       // 已經 6 星：仍然可以出現美食評家，
+       // 但挑戰成功後不再增加星數
+      if (this.restaurant.michelinStars >= 6 &&
+        this.restaurant.atmosphereScore >= 100 &&
+        this.restaurant.foodScore >= 100 &&
+        this.restaurant.serviceScore >= 100
+       ) {
+        if (!this.critic.active) {
+          this.summonCritic();
+          this.logs.unshift('🕵️ 六星明星餐廳再次迎來美食評家！這次是榮譽挑戰，不再增加星級。');
+        }
+        return;
+      }
+
+      // 0～5 星的原本升星流程
+      if (
         this.restaurant.atmosphereScore >= 100 &&
         this.restaurant.foodScore >= 100 &&
         this.restaurant.serviceScore >= 100 &&
         this.restaurant.michelinStars < 6
-      ){
-        if(!this.restaurant.criticStageCleared){
+      ) {
+        if (!this.restaurant.criticStageCleared) {
           this.summonCritic();
           this.logs.unshift('🕵️ 三項評分已達升星門檻，美食評家來訪！通過創意料理才能升星。');
-          return;
-        }
 
-        this.restaurant.atmosphereScore -= 100;
-        this.restaurant.foodScore -= 100;
-        this.restaurant.serviceScore -= 100;
-        this.restaurant.michelinStars += 1;
-        this.restaurant.criticStageCleared = false;
-        this.logs.unshift(`⭐ 米其林升級！目前 ${this.restaurant.michelinStars}/6 顆星。`);
-        if(this.restaurant.michelinStars >= 6){
-          this.logs.unshift('🏆 恭喜達成 Michelin ★★★★★★！獲得明星餐廳證書。');
+         return;
         }
       }
     },
@@ -1052,19 +1069,28 @@ createApp({
       const picked = [...this.selectedIngredients].sort().join(',');
 
       if (ans === picked) {
-        this.logs.unshift(`✅ 創意料理成功！通過第 ${this.critic.currentIndex + 1} 位美食評家考驗。`);
-
+        this.logs.unshift(
+          `✅ 創意料理成功！通過第 ${this.critic.currentIndex + 1} 位美食評家考驗。`
+        );
         this.critic.currentIndex += 1;
 
         if (this.critic.currentIndex >= this.critic.required) {
           try {
-            const response = await fetch('/api/game/critic-success', {
+            // 判斷目前是否已經是 6 星
+            const isSixStars = this.restaurant.michelinStars >= 6;
+
+            // 6 星後走榮譽挑戰 API；0～5 星走一般升星 API
+            const apiUrl = isSixStars
+              ? '/api/game/critic-six-star-success'
+              : '/api/game/critic-success';
+
+            const response = await fetch(apiUrl, {
               method: 'POST'
             });
             const data = await response.json();
 
             if (!response.ok) {
-              throw new Error(data.message || '升星失敗');
+              throw new Error(data.message || '美食評家挑戰處理失敗');
             }
 
             // 關閉美食評家畫面
@@ -1072,25 +1098,41 @@ createApp({
             this.critic.gameStarted = false;
             this.selectedIngredients = [];
 
-            // 重新讀取 MySQL 最新狀態
+            // 重新讀取 MySQL 最新資料
             await this.loadRestaurant();
 
-            this.logs.unshift(`⭐ 美食評家滿意！米其林升星成功，目前 ${this.restaurant.michelinStars}/6 顆星。`);
-            this.showToast(`升星成功！目前 ${this.restaurant.michelinStars} 星`);
-          } catch (error) {
-              console.error(error);
-              this.showToast(error.message);
-            }
+            if (isSixStars) {
+              // 已經是 6 星：不再升星
+              this.logs.unshift(
+                '🏆 六星美食評家榮譽挑戰成功！維持 Michelin ★★★★★★，可以繼續經營餐廳。'
+              );
+              this.showToast('六星榮譽挑戰成功！');
+            } else {
+              // 0～5 星：正常升星
+              this.logs.unshift(
+                `⭐ 美食評家滿意！米其林升星成功，目前 ${this.restaurant.michelinStars}/6 顆星。`
+              );
+              this.showToast(
+                `升星成功！目前 ${this.restaurant.michelinStars} 星`
+              );
 
-        } else {
-           this.pickCriticTarget();
-           this.showToast('下一位美食評家登場');
+              // 剛升到第 6 星才開啟結局畫面
+              if (this.restaurant.michelinStars >= 6) {
+                this.showSixStarEnding = true;
+              }
+            }
+          } catch (error) {
+            console.error(error);
+            this.showToast(error.message);
           }
-            
-      } else {
-         this.failCriticChallenge();
+        } else {
+          this.pickCriticTarget();
+          this.showToast('下一位美食評家登場');
         }
-   },
+      } else {
+        this.failCriticChallenge();
+      }
+    },
     failCriticChallenge(){
       this.restaurant.atmosphereScore = Math.floor(this.restaurant.atmosphereScore / 2);
       this.restaurant.foodScore = Math.floor(this.restaurant.foodScore / 2);
@@ -1152,7 +1194,14 @@ createApp({
          this.showToast(error.message);
          }
     },
-    showToast(msg){ this.toast=msg; setTimeout(()=>this.toast='',1800); }
+    showToast(msg){ this.toast=msg; setTimeout(()=>this.toast='',1800); },
+
+    continueAfterSixStars() {
+      this.showSixStarEnding = false;
+      this.logs.unshift('🏆 已達成 Michelin ★★★★★★！現在可以繼續經營明星餐廳。');
+      this.showToast('回到餐廳繼續經營！');
+    },
+
   }
 }).mount('#app')
 </script>

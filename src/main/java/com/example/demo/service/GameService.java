@@ -113,4 +113,29 @@ public class GameService {
 
             restaurantRepository.save(restaurant);
     }
+    @Transactional
+    public void sixStarCriticSuccess() {
+        Restaurant restaurant = restaurantRepository.findById(1L)
+            .orElseThrow(() -> new RuntimeException("找不到餐廳資料"));
+
+        // 必須已經是 6 星
+        if (restaurant.getMichelinStars() < 6) {
+          throw new RuntimeException("目前尚未達到六星餐廳");
+        }
+
+        // 三項評分都必須達到 100
+        if (restaurant.getAtmosphereScore() < 100 ||
+            restaurant.getFoodScore() < 100 ||
+            restaurant.getServiceScore() < 100) {
+              throw new RuntimeException("三項評分尚未達到美食評家挑戰門檻");
+            }
+
+        // ⭐ 六星後不再增加星數，只扣除三項評分
+        restaurant.setAtmosphereScore(restaurant.getAtmosphereScore() - 100);
+        restaurant.setFoodScore(restaurant.getFoodScore() - 100);
+        restaurant.setServiceScore(restaurant.getServiceScore() - 100);
+        // Michelin 維持 6 星，不做 +1
+        restaurant.setCriticStageCleared(false);
+        restaurantRepository.save(restaurant);
+    }
 }
