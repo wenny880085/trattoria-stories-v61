@@ -9,11 +9,13 @@ import com.example.demo.entity.Chef;
 import com.example.demo.entity.Decoration;
 import com.example.demo.entity.Recipe;
 import com.example.demo.entity.Restaurant;
+import com.example.demo.entity.Waiter;
 import com.example.demo.repository.ChefRepository;
 import com.example.demo.repository.DecorationRepository;
 import com.example.demo.repository.GameOrderRepository;
 import com.example.demo.repository.RecipeRepository;
 import com.example.demo.repository.RestaurantRepository;
+import com.example.demo.repository.WaiterRepository;
 
 @Service
 public class GameService {
@@ -23,17 +25,20 @@ public class GameService {
     private final GameOrderRepository orderRepository;
     private final RecipeRepository recipeRepository;
     private final ChefRepository chefRepository;
+    private final WaiterRepository waiterRepository;
 
     public GameService(RestaurantRepository restaurantRepository,
                        DecorationRepository decorationRepository,
                        GameOrderRepository orderRepository,
                        RecipeRepository recipeRepository,
-                       ChefRepository chefRepository) {
+                       ChefRepository chefRepository,
+                       WaiterRepository waiterRepository) {
         this.restaurantRepository = restaurantRepository;
         this.decorationRepository = decorationRepository;
         this.orderRepository = orderRepository;
         this.recipeRepository = recipeRepository;
         this.chefRepository = chefRepository;
+        this.waiterRepository = waiterRepository;
     }
 
     @Transactional
@@ -84,6 +89,15 @@ public class GameService {
             chef.setUpgradeCost(300);
         }
         chefRepository.saveAll(chefs);
+
+        // 重置服務員狀態
+        List<Waiter> waiters = waiterRepository.findAll();
+        for (Waiter waiter : waiters) {
+          waiter.setHired(false);
+          waiter.setLevel(0);
+          waiter.setUpgradeCost(300);
+        }
+        waiterRepository.saveAll(waiters);
     }
 
     @Transactional

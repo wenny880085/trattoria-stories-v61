@@ -538,13 +538,36 @@
             </div>
 
             <div class="item">
+
               <h3>🤵 服務員</h3>
-              <p v-if="!waiter">目前沒有服務員，服務拿 10 分機率低。</p>
+              <p v-if="!waiter || !waiter.hired">目前沒有服務員，服務拿 10 分機率低。</p>
               <p v-else>{{ waiter.name }}｜Lv.{{ waiter.level }}/5</p>
-              <button class="btn5" v-if="!waiter" @click="hireWaiter" :disabled="restaurant.gold < 180">聘僱 180</button>
-              <button class="btn5" v-else @click="upgradeWaiter" :disabled="waiter.level>=5 || restaurant.gold < waiterUpgradeCost">
-                {{ waiter.level>=5 ? '滿級' : '升級 '+waiterUpgradeCost }}
+              <p>
+              <span class="badge">Lv1 基礎服務</span>
+              <span class="badge">Lv3 熟練服務</span>
+              <span class="badge">Lv5 頂級服務</span>
+              </p>
+              <button
+                class="btn5"
+                v-if="waiter && !waiter.hired"
+                @click="hireWaiter"
+                :disabled="restaurant.gold < 200"
+              >
+              聘僱 200
               </button>
+
+              <button
+                class="btn5"
+                v-else-if="waiter && waiter.hired"
+                @click="upgradeWaiter"
+                :disabled="waiter.level >= 5 || restaurant.gold < waiter.upgradeCost"
+              >
+              {{ waiter.level >= 5 ? '滿級' : '升級 ' + waiter.upgradeCost }}
+              </button>
+
+              <p v-else>
+             服務員資料讀取中……
+              </p>
             </div>
           </div>
         </template>
@@ -724,6 +747,7 @@ createApp({
     this.loadRecipes();
     this.loadDecorations();
     this.loadChef();
+    this.loadWaiter();
   },
   computed:{
     availableMenus(){ return this.menus.filter(m=>m.unlocked) },
@@ -879,6 +903,20 @@ createApp({
          this.showToast(error.message);
         }
     },
+    async loadWaiter() {
+      try {
+        const response = await fetch('/api/waiter');
+        const data = await response.json();
+        if (!response.ok) {throw new Error(data.message || '服務員資料讀取失敗');}
+        this.waiter = data;
+
+      } 
+      catch (error) {
+        console.error(error);
+        this.showToast(error.message);
+      }
+    },
+
     login(){
       if(!this.username.trim()){ this.showToast('請輸入玩家名稱'); return; }
       this.isLogin=true;
@@ -1009,20 +1047,40 @@ createApp({
         }
     },
 
-    hireWaiter(){
-      if(this.restaurant.gold < 180){ this.showToast('金幣不足'); return; }
-      this.restaurant.gold -= 180;
-      this.waiter = {name:'服務員 Mia', level:1};
-      this.logs.unshift('成功聘僱服務員 Mia！');
+    async hireWaiter() {
+      try {const response = await fetch('/api/waiter/hire', {method: 'POST'});
+        const data = await response.json();
+        if (!response.ok) {throw new Error(data.message || '聘僱服務員失敗');}
+        this.waiter = data;
+        await this.loadRestaurant();
+        
+        this.logs.unshift(`🤵 成功聘僱服務員 ${this.waiter.name}！`);
+
+        this.showToast(`成功聘僱 ${this.waiter.name}！`);
+
+      } catch (error) {console.error(error);
+          this.showToast(error.message);
+        }
     },
-    upgradeWaiter(){
-      if(!this.waiter || this.waiter.level >= 5) return;
-      if(this.restaurant.gold < this.waiterUpgradeCost){ this.showToast('金幣不足'); return; }
-      const cost = this.waiterUpgradeCost;
-      this.restaurant.gold -= cost;
-      this.waiter.level += 1;
-      this.logs.unshift(`服務員升級成功，目前 Lv.${this.waiter.level}。`);
-    },
+
+    async upgradeWaiter() {
+      try {const response = await fetch('/api/waiter/upgrade', {method: 'POST'});
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || '服務員升級失敗');
+        }
+
+        this.waiter = data;
+        await this.loadRestaurant();
+
+        this.logs.unshift(`🤵 服務員 ${this.waiter.name} 升級成功，目前 Lv.${this.waiter.level}！`);
+
+        this.showToast(`${this.waiter.name} 升級至 Lv.${this.waiter.level}`);
+
+      } catch (error) {console.error(error);
+          this.showToast(error.message);
+        }
+    }, 
     decorUpgradeCost(d){ return 100 + d.level * 120; },
     buyDecor(d){
       if(this.restaurant.gold < d.buyCost){ this.showToast('金幣不足'); return; }
