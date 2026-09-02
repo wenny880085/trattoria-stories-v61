@@ -10,10 +10,13 @@ import com.example.demo.entity.Chef;
 import com.example.demo.entity.Decoration;
 import com.example.demo.entity.Recipe;
 import com.example.demo.entity.Restaurant;
+import com.example.demo.entity.Waiter;
 import com.example.demo.repository.ChefRepository;
 import com.example.demo.repository.DecorationRepository;
 import com.example.demo.repository.RecipeRepository;
 import com.example.demo.repository.RestaurantRepository;
+import com.example.demo.repository.WaiterRepository;
+
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -22,15 +25,18 @@ public class DataInitializer implements CommandLineRunner {
     private final RecipeRepository recipeRepository;
     private final DecorationRepository decorationRepository;
     private final ChefRepository chefRepository;
+    private final WaiterRepository waiterRepository;
 
     public DataInitializer(RestaurantRepository restaurantRepository,
                            RecipeRepository recipeRepository,
                            DecorationRepository decorationRepository,
-                           ChefRepository chefRepository) {
+                           ChefRepository chefRepository,
+                           WaiterRepository waiterRepository) {
         this.restaurantRepository = restaurantRepository;
         this.recipeRepository = recipeRepository;
         this.decorationRepository = decorationRepository;
         this.chefRepository = chefRepository;
+        this.waiterRepository = waiterRepository;
     }
 
     @Override
@@ -39,6 +45,18 @@ public class DataInitializer implements CommandLineRunner {
         initRecipes();
         initDecorations();
         initChefs();
+        initWaiters();
+    }
+
+    private void initWaiters() {
+        if (waiterRepository.count() == 0) {
+            Waiter waiter = new Waiter();
+            waiter.setName("Sofia");
+            waiter.setHired(false);
+            waiter.setLevel(0);
+            waiter.setUpgradeCost(300);
+            waiterRepository.save(waiter);
+        }
     }
 
     private void initRestaurant() {

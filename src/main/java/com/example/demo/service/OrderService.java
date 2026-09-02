@@ -14,12 +14,14 @@ import com.example.demo.entity.Chef;
 import com.example.demo.entity.GameOrder;
 import com.example.demo.entity.Recipe;
 import com.example.demo.entity.Restaurant;
+import com.example.demo.entity.Waiter;
 import com.example.demo.exception.GameException;
 import com.example.demo.repository.ChefRepository;
 import com.example.demo.repository.DecorationRepository;
 import com.example.demo.repository.GameOrderRepository;
 import com.example.demo.repository.RecipeRepository;
 import com.example.demo.repository.RestaurantRepository;
+import com.example.demo.repository.WaiterRepository;
 
 @Service
 public class OrderService {
@@ -28,17 +30,20 @@ public class OrderService {
     private final RecipeRepository recipeRepository;
     private final RestaurantRepository restaurantRepository;
     private final ChefRepository chefRepository;
+    private final WaiterRepository waiterRepository;
     private final DecorationRepository decorationRepository;
 
     public OrderService(GameOrderRepository orderRepository,
                         RecipeRepository recipeRepository,
                         RestaurantRepository restaurantRepository,
                         ChefRepository chefRepository,
+                        WaiterRepository waiterRepository,
                         DecorationRepository decorationRepository) {
         this.orderRepository = orderRepository;
         this.recipeRepository = recipeRepository;
         this.restaurantRepository = restaurantRepository;
         this.chefRepository = chefRepository;
+        this.waiterRepository = waiterRepository;
         this.decorationRepository = decorationRepository;
     }
 
@@ -82,8 +87,13 @@ public class OrderService {
 
         decorationLevel = Math.min(decorationLevel, 5);
 
-        // 服務員後端尚未完成，暫時以 Lv.0 計算
-        int waiterLevel = 0;
+        Waiter hiredWaiter = waiterRepository.findAll()
+           .stream()
+           .filter(waiter -> waiter != null && waiter.isHired())
+           .findFirst()
+           .orElse(null);
+
+        int waiterLevel = hiredWaiter == null ? 0 : hiredWaiter.getLevel();
         
         int atmosphereGain = rollScoreByLevel(decorationLevel);
         int foodGain = rollScoreByLevel(chefLevel);
